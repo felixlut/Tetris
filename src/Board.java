@@ -1,27 +1,17 @@
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Queue;
-import java.util.StringJoiner;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Board {
 
-    // KeyCodes
-    private static final int UP = 38;
-    private static final int DOWN = 40;
-    private static final int RIGHT = 39;
-    private static final int LEFT = 37;
-    private static final int SPACE = 32;
-
     private Tile[][] board;
-    private Tetrominoe activeTetrominoe;
+    private Tetromino activeTetromino;
     private int score;
 
     // The number of rows and columns
     private final int columns;
     private final int rows;
 
-    // Used to store the coordinates of the paused active tetrominoe
+    // Used to store the coordinates of the paused active tetromino
     private ArrayList<Coordinate> pausedCoords;
     private boolean paused;
 
@@ -30,7 +20,7 @@ public class Board {
         this.rows = rows;
         this.columns = columns;
         score = 0;
-        activeTetrominoe = null;
+        activeTetromino = null;
         board = new Tile[columns][rows];
         for (int i = 0; i < columns; i++) {
             for (int j = 0; j < rows; j++) {
@@ -42,67 +32,67 @@ public class Board {
     }
 
     /**
-     * Create a new active Tetrominoe if possible.
+     * Create a new active Tetromino if possible.
      * @return false if there is a square occupying any tile on either the highest or second highest row, otherwise true
      */
-    public boolean createNewTetrominoe () {
+    public boolean createNewTetromino() {
         // If any tile of the 2 highest rows are occupied, return false
         for (int i = 0; i < 10; i++) {
             if (board[i][0].isFull() || board[i][1].isFull()) {
                 return false;
             }
         }
-        activeTetrominoe = new Tetrominoe();
-        Square[] tetrominoeParts = activeTetrominoe.getSquares();
+        activeTetromino = new Tetromino();
+        Square[] tetrominoParts = activeTetromino.getSquares();
 
         // TODO: 2018-03-23 Streamline this
-        switch (activeTetrominoe.getShape()) {
+        switch (activeTetromino.getShape()) {
             case LINE0:
                 for (int i = 0; i < 4; i++) {
-                    board[i + 3][0].setAndActiveSquare(tetrominoeParts[i]);
+                    board[i + 3][0].setAndActiveSquare(tetrominoParts[i]);
                 }
                 break;
             case BOX:
                 for (int i = 0; i < 2; i++) {
-                    board[i + 4][0].setAndActiveSquare(tetrominoeParts[i]);
+                    board[i + 4][0].setAndActiveSquare(tetrominoParts[i]);
                 }
                 for (int i = 0; i < 2; i++) {
-                    board[i + 4][1].setAndActiveSquare(tetrominoeParts[i + 2]);
+                    board[i + 4][1].setAndActiveSquare(tetrominoParts[i + 2]);
                 }
                 break;
             case PYRAMID0:
-                board[4][0].setAndActiveSquare(tetrominoeParts[0]);
+                board[4][0].setAndActiveSquare(tetrominoParts[0]);
                 for (int i = 0; i < 3; i++) {
-                    board[i + 3][1].setAndActiveSquare(tetrominoeParts[i + 1]);
+                    board[i + 3][1].setAndActiveSquare(tetrominoParts[i + 1]);
                 }
                 break;
             case RIGHTL0:
-                board[3][0].setAndActiveSquare(tetrominoeParts[0]);
+                board[3][0].setAndActiveSquare(tetrominoParts[0]);
                 for (int i = 0; i < 3; i++) {
-                    board[i + 3][1].setAndActiveSquare(tetrominoeParts[i + 1]);
+                    board[i + 3][1].setAndActiveSquare(tetrominoParts[i + 1]);
                 }
                 break;
             case LEFTL0:
-                board[5][0].setAndActiveSquare(tetrominoeParts[0]);
+                board[5][0].setAndActiveSquare(tetrominoParts[0]);
                 for (int i = 0; i < 3; i++) {
-                    board[i + 3][1].setAndActiveSquare(tetrominoeParts[i + 1]);
+                    board[i + 3][1].setAndActiveSquare(tetrominoParts[i + 1]);
                 }
                 break;
             case RIGHTSNAKE0:
                 for (int i = 0; i < 2; i++) {
-                    board[i + 4][0].setAndActiveSquare(tetrominoeParts[i]);
+                    board[i + 4][0].setAndActiveSquare(tetrominoParts[i]);
                 }
                 for (int i = 0; i < 2; i++) {
-                    board[i + 3][1].setAndActiveSquare(tetrominoeParts[i + 2]);
+                    board[i + 3][1].setAndActiveSquare(tetrominoParts[i + 2]);
 
                 }
                 break;
             case LEFTSNAKE0:
                 for (int i = 0; i < 2; i++) {
-                    board[i + 3][0].setAndActiveSquare(tetrominoeParts[i]);
+                    board[i + 3][0].setAndActiveSquare(tetrominoParts[i]);
                 }
                 for (int i = 0; i < 2; i++) {
-                    board[i + 4][1].setAndActiveSquare(tetrominoeParts[i + 2]);
+                    board[i + 4][1].setAndActiveSquare(tetrominoParts[i + 2]);
                 }
                 break;
         }
@@ -110,14 +100,14 @@ public class Board {
     }
 
     /**
-     * Tries to move down the active Tetrominoe. moveDownActiveTetrominoeHelper() assists in determining if a
+     * Tries to move down the active Tetromino. moveDownActiveTetrominoHelper() assists in determining if a
      * move is possible or not. Note: The setup of this method is somewhat different from the helper
      * method since the order of the for each statement won't always yield a valid order of moving the squares
      * down, i.e. there would be a possibility of setting an active square to null before it's moved down
      * @return          true if a move has been made, false otherwise
      */
-    public boolean moveDownActiveTetrominoe() {
-        if (moveDownActiveTetrominoeHelper()) {
+    public boolean moveDownActiveTetromino() {
+        if (moveDownActiveTetrominoHelper()) {
             for (int i = columns - 1; i >= 0; i--) {
                 for (int j = rows - 1; j >= 0; j--) {
                     if (board[i][j].isActive()) {
@@ -140,12 +130,12 @@ public class Board {
     }
 
     /**
-     * Helper for moveDownActiveTetrominoe(). Basic idea is that this method checks whether or not a move down
-     * for the active Tetrominoe is possible, i.e. no floor or other square in the way, and returns the result
+     * Helper for moveDownActiveTetromino(). Basic idea is that this method checks whether or not a move down
+     * for the active Tetromino is possible, i.e. no floor or other square in the way, and returns the result
      * @return          true if a move down is possible, false otherwise
      */
-    private boolean moveDownActiveTetrominoeHelper() {
-        for (Square square : activeTetrominoe.getSquares()) {
+    private boolean moveDownActiveTetrominoHelper() {
+        for (Square square : activeTetromino.getSquares()) {
             int xPos = square.getxPos();
             int yPos = square.getyPos();
             if (!(yPos + 1 < 20) || !(!board[xPos][yPos + 1].isFull() || board[xPos][yPos + 1].isActive())){
@@ -156,15 +146,15 @@ public class Board {
     }
 
     /**
-     * Makes a horizontal move of the active Tetrominoe if possible. moveHorizActiveTetrominoeHelper() assists
+     * Makes a horizontal move of the active Tetromino if possible. moveHorizActiveTetrominoHelper() assists
      * in determining if a move is possible Note: The setup of this method is somewhat different from the helper
      * method since the order of the for each statement won't always yield a valid order of moving the squares
      * horizontally, i.e. there would be a possibility of setting an active square to null before it's moved
      * @param right     true if the move should be to the right, false if it's supposed to be to the left
      * @return          true if a move has been made, false otherwise
      */
-    public boolean moveHorizActiveTetrominoe(boolean right) {
-        boolean temp = moveHorizActiveTetrominoeHelper(right);
+    public boolean moveHorizActiveTetromino(boolean right) {
+        boolean temp = moveHorizActiveTetrominoHelper(right);
         if (temp && right) {
             for (int i = columns - 1; i >= 0; i--) {
                 for (int j = rows - 1; j >= 0; j--) {
@@ -192,13 +182,13 @@ public class Board {
     }
 
     /**
-     * Helper for moveHorizActiveTetrominoe(). Basic idea is that this method checks whether or not a horizontal
-     * move for the active Tetrominoe is possible, i.e. no wall or other square in the way, and returns the result
+     * Helper for moveHorizActiveTetromino(). Basic idea is that this method checks whether or not a horizontal
+     * move for the active Tetromino is possible, i.e. no wall or other square in the way, and returns the result
      * @param right     true if the move should be to the right, false if it's supposed to be to the left
      * @return          true if a move is possible, false otherwise
      */
-    private boolean moveHorizActiveTetrominoeHelper(boolean right) {
-        for (Square square : activeTetrominoe.getSquares()) {
+    private boolean moveHorizActiveTetrominoHelper(boolean right) {
+        for (Square square : activeTetromino.getSquares()) {
             int xPos = square.getxPos();
             int yPos = square.getyPos();
             if (right) {
@@ -215,275 +205,273 @@ public class Board {
     }
 
     /**
-     * Attempt to rotate the active Tetrominoe. The rotation will happen as long as the squares of the active
-     * Tetrominoe wouldn't leave the board or "crash" into already filled tiles
+     * Attempt to rotate the active Tetromino. The rotation will happen as long as the squares of the active
+     * Tetromino wouldn't leave the board or "crash" into already filled tiles
      */
     // TODO: 2018-04-18 Streamline this
-    public void rotateActiveTetrominoe () {
-        if (!paused) {
-            int x0 = activeTetrominoe.getSquares()[0].getxPos();
-            int y0 = activeTetrominoe.getSquares()[0].getyPos();
+    public void rotateActiveTetromino() {
+        int x0 = activeTetromino.getSquares()[0].getxPos();
+        int y0 = activeTetromino.getSquares()[0].getyPos();
 
-            int x1 = activeTetrominoe.getSquares()[1].getxPos();
-            int y1 = activeTetrominoe.getSquares()[1].getyPos();
+        int x1 = activeTetromino.getSquares()[1].getxPos();
+        int y1 = activeTetromino.getSquares()[1].getyPos();
 
-            int x2 = activeTetrominoe.getSquares()[2].getxPos();
-            int y2 = activeTetrominoe.getSquares()[2].getyPos();
+        int x2 = activeTetromino.getSquares()[2].getxPos();
+        int y2 = activeTetromino.getSquares()[2].getyPos();
 
-            int x3 = activeTetrominoe.getSquares()[3].getxPos();
-            int y3 = activeTetrominoe.getSquares()[3].getyPos();
+        int x3 = activeTetromino.getSquares()[3].getxPos();
+        int y3 = activeTetromino.getSquares()[3].getyPos();
 
-            int polarize = 1;
-            Tetrominoe.Shape type = activeTetrominoe.getShape();
-            switch (type) {
-                case LINE0:
-                    polarize = -1;
-                case LINE1:
-                    Coordinate[] coordinates = {
-                            new Coordinate(x0 - 1 * polarize, y0 - 1 * polarize),
-                            new Coordinate(x2 + 1 * polarize, y2 + 1 * polarize),
-                            new Coordinate(x3 + 2 * polarize, y3 + 2 * polarize)
-                    };
-                    if (isAllowedMove(coordinates)) {
-                        board[x0 - 1 * polarize][y0 - 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[0]);
-                        board[x0][y0].setAndActiveSquare(null);
+        int polarize = 1;
+        Tetromino.Shape type = activeTetromino.getShape();
+        switch (type) {
+            case LINE0:
+                polarize = -1;
+            case LINE1:
+                Coordinate[] coordinates = {
+                        new Coordinate(x0 - 1 * polarize, y0 - 1 * polarize),
+                        new Coordinate(x2 + 1 * polarize, y2 + 1 * polarize),
+                        new Coordinate(x3 + 2 * polarize, y3 + 2 * polarize)
+                };
+                if (isAllowedMove(coordinates)) {
+                    board[x0 - 1 * polarize][y0 - 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[0]);
+                    board[x0][y0].setAndActiveSquare(null);
 
-                        board[x2 + 1 * polarize][y2 + 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
+                    board[x2 + 1 * polarize][y2 + 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
 
 
-                        board[x3 + 2 * polarize][y3 + 2 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-                        if (type == Tetrominoe.Shape.LINE0) {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.LINE1);
-                        } else {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.LINE0);
-                        }
+                    board[x3 + 2 * polarize][y3 + 2 * polarize].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+                    if (type == Tetromino.Shape.LINE0) {
+                        activeTetromino.setShape(Tetromino.Shape.LINE1);
+                    } else {
+                        activeTetromino.setShape(Tetromino.Shape.LINE0);
                     }
-                    break;
-                case BOX:
-                    // Do nothing
-                    break;
-                case PYRAMID0:
-                    Coordinate[] coordinates1 = {
-                            new Coordinate(x1 + 1, y1 + 1)
-                    };
-                    if (isAllowedMove(coordinates1)) {
-                        board[x1 + 1][y1 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-                        activeTetrominoe.setShape(Tetrominoe.Shape.PYRAMID1);
+                }
+                break;
+            case BOX:
+                // Do nothing
+                break;
+            case PYRAMID0:
+                Coordinate[] coordinates1 = {
+                        new Coordinate(x1 + 1, y1 + 1)
+                };
+                if (isAllowedMove(coordinates1)) {
+                    board[x1 + 1][y1 + 1].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+                    activeTetromino.setShape(Tetromino.Shape.PYRAMID1);
+                }
+                break;
+            case PYRAMID1:
+                Coordinate[] coordinates2 = {
+                        new Coordinate(x1 - 1, y1 + 1)
+                };
+                if (isAllowedMove(coordinates2)) {
+                    board[x0 - 1][y0 + 1].setAndActiveSquare(activeTetromino.getSquares()[0]);
+                    board[x0][y0].setAndActiveSquare(null);
+                    activeTetromino.setShape(Tetromino.Shape.PYRAMID2);
+                }
+                break;
+            case PYRAMID2:
+                Coordinate[] coordinates3 = {
+                        new Coordinate(x3 - 1, y3 - 1)
+                };
+                if (isAllowedMove(coordinates3)) {
+                    board[x3 - 1][y3 - 1].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+                    activeTetromino.setShape(Tetromino.Shape.PYRAMID3);
+                }
+                break;
+            case PYRAMID3:
+                Coordinate[] coordinates4 = {
+                        new Coordinate(x3 + 1, y3 + 1),
+                        new Coordinate(x0 + 1, y0 - 1),
+                        new Coordinate(x1 - 1, y1 - 1)
+                };
+                if (isAllowedMove(coordinates4)) {
+                    board[x3 + 1][y3 + 1].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+
+                    board[x0 + 1][y0 - 1].setAndActiveSquare(activeTetromino.getSquares()[0]);
+                    board[x0][y0].setAndActiveSquare(null);
+
+                    board[x1 - 1][y1 - 1].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+
+                    activeTetromino.setShape(Tetromino.Shape.PYRAMID0);
+                }
+                break;
+            case RIGHTL0:
+                Coordinate[] coordinates5 = {
+                        new Coordinate(x2, y2 - 1),
+                        new Coordinate(x3 - 2, y3 + 1)
+                };
+                if (isAllowedMove(coordinates5)) {
+                    board[x2][y2 - 1].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+                    board[x3 - 2][y3 + 1].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+
+                    activeTetromino.setShape(Tetromino.Shape.RIGHTL1);
+                }
+                break;
+            case RIGHTL1:
+                Coordinate[] coordinates6 = {
+                        new Coordinate(x2 - 2, y2),
+                        new Coordinate(x3 - 2, y3 - 2)
+                };
+                if (isAllowedMove(coordinates6)) {
+                    board[x2 - 2][y2].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+                    board[x3 - 2][y3 - 2].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+
+                    activeTetromino.setShape(Tetromino.Shape.RIGHTL2);
+                }
+                break;
+            case RIGHTL2:
+                Coordinate[] coordinates7 = {
+                        new Coordinate(x2 + 1, y2 - 1),
+                        new Coordinate(x3 + 1, y3 + 1)
+                };
+                if (isAllowedMove(coordinates7)) {
+                    board[x2 + 1][y2 - 1].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+                    board[x3 + 1][y3 + 1].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+
+                    activeTetromino.setShape(Tetromino.Shape.RIGHTL3);
+                }
+                break;
+            case RIGHTL3:
+                Coordinate[] coordinates8 = {
+                        new Coordinate(x2 + 1, y2 + 2),
+                        new Coordinate(x3 + 3, y3)
+                };
+                if (isAllowedMove(coordinates8)) {
+                    board[x2 + 1][y2 + 2].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+                    board[x3 + 3][y3].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+
+                    activeTetromino.setShape(Tetromino.Shape.RIGHTL0);
+                }
+                break;
+            case LEFTL0:
+                Coordinate[] coordinates9 = {
+                        new Coordinate(x1 + 3, y1),
+                        new Coordinate(x2 + 1, y2 - 2)
+                };
+                if (isAllowedMove(coordinates9)) {
+
+                    board[x1 + 3][y1].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+                    board[x2 + 1][y2 - 2].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+
+                    activeTetromino.setShape(Tetromino.Shape.LEFTL1);
+                }
+                break;
+            case LEFTL1:
+                Coordinate[] coordinates10 = {
+                        new Coordinate(x1 - 1, y1 + 1),
+                        new Coordinate(x2 + 1, y2 + 1)
+                };
+                if (isAllowedMove(coordinates10)) {
+
+                    board[x1 + 1][y1 - 1].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+                    board[x2 + 1][y2 + 1].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+
+                    activeTetromino.setShape(Tetromino.Shape.LEFTL2);
+                }
+                break;
+            case LEFTL2:
+                Coordinate[] coordinates11 = {
+                        new Coordinate(x1 - 2, y1 + 2),
+                        new Coordinate(x2 - 2, y2)
+                };
+                if (isAllowedMove(coordinates11)) {
+
+                    board[x1 - 2][y1 + 2].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+                    board[x2 - 2][y2].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+
+                    activeTetromino.setShape(Tetromino.Shape.LEFTL3);
+                }
+                break;
+            case LEFTL3:
+                Coordinate[] coordinates12 = {
+                        new Coordinate(x1 - 2, y1 - 1),
+                        new Coordinate(x2, y2 + 1)
+                };
+                if (isAllowedMove(coordinates12)) {
+
+                    board[x1 - 2][y1 - 1].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+                    board[x2][y2 + 1].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+
+
+                    activeTetromino.setShape(Tetromino.Shape.LEFTL0);
+                }
+                break;
+            case RIGHTSNAKE0:
+                polarize = -1;
+            case RIGHTSNAKE1:
+                Coordinate[] coordinates13 = { // TODO: 2018-03-28 Fix name
+                        new Coordinate(x1 + 2 * polarize, y1 + 1 * polarize),
+                        new Coordinate(x2, y2 + 1 * polarize)
+                };
+
+                if (isAllowedMove(coordinates13)) {
+                    board[x1 + 2 * polarize][y1 + 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[1]);
+                    board[x1][y1].setAndActiveSquare(null);
+
+                    board[x2][y2 + 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[2]);
+                    board[x2][y2].setAndActiveSquare(null);
+                    if (type == Tetromino.Shape.RIGHTSNAKE0) {
+                        activeTetromino.setShape(Tetromino.Shape.RIGHTSNAKE1);
+                    } else {
+                        activeTetromino.setShape(Tetromino.Shape.RIGHTSNAKE0);
                     }
-                    break;
-                case PYRAMID1:
-                    Coordinate[] coordinates2 = {
-                            new Coordinate(x1 - 1, y1 + 1)
-                    };
-                    if (isAllowedMove(coordinates2)) {
-                        board[x0 - 1][y0 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[0]);
-                        board[x0][y0].setAndActiveSquare(null);
-                        activeTetrominoe.setShape(Tetrominoe.Shape.PYRAMID2);
+                }
+                break;
+            case LEFTSNAKE0:
+                polarize = -1;
+            case LEFTSNAKE1:
+                Coordinate[] coordinates14 = { // TODO: 2018-03-28 Fix name
+                        new Coordinate(x0 - 2 * polarize, y0 + 1 * polarize),
+                        new Coordinate(x3, y3 + 1 * polarize)
+                };
+                if (isAllowedMove(coordinates14)) {
+                    board[x0 - 2 * polarize][y0 + 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[0]);
+                    board[x0][y0].setAndActiveSquare(null);
+
+                    board[x3][y3 + 1 * polarize].setAndActiveSquare(activeTetromino.getSquares()[3]);
+                    board[x3][y3].setAndActiveSquare(null);
+                    if (type == Tetromino.Shape.LEFTSNAKE0) {
+                        activeTetromino.setShape(Tetromino.Shape.LEFTSNAKE1);
+                    } else {
+                        activeTetromino.setShape(Tetromino.Shape.LEFTSNAKE0);
                     }
-                    break;
-                case PYRAMID2:
-                    Coordinate[] coordinates3 = {
-                            new Coordinate(x3 - 1, y3 - 1)
-                    };
-                    if (isAllowedMove(coordinates3)) {
-                        board[x3 - 1][y3 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-                        activeTetrominoe.setShape(Tetrominoe.Shape.PYRAMID3);
-                    }
-                    break;
-                case PYRAMID3:
-                    Coordinate[] coordinates4 = {
-                            new Coordinate(x3 + 1, y3 + 1),
-                            new Coordinate(x0 + 1, y0 - 1),
-                            new Coordinate(x1 - 1, y1 - 1)
-                    };
-                    if (isAllowedMove(coordinates4)) {
-                        board[x3 + 1][y3 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-
-                        board[x0 + 1][y0 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[0]);
-                        board[x0][y0].setAndActiveSquare(null);
-
-                        board[x1 - 1][y1 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.PYRAMID0);
-                    }
-                    break;
-                case RIGHTL0:
-                    Coordinate[] coordinates5 = {
-                            new Coordinate(x2, y2 - 1),
-                            new Coordinate(x3 - 2, y3 + 1)
-                    };
-                    if (isAllowedMove(coordinates5)) {
-                        board[x2][y2 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-                        board[x3 - 2][y3 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTL1);
-                    }
-                    break;
-                case RIGHTL1:
-                    Coordinate[] coordinates6 = {
-                            new Coordinate(x2 - 2, y2),
-                            new Coordinate(x3 - 2, y3 - 2)
-                    };
-                    if (isAllowedMove(coordinates6)) {
-                        board[x2 - 2][y2].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-                        board[x3 - 2][y3 - 2].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTL2);
-                    }
-                    break;
-                case RIGHTL2:
-                    Coordinate[] coordinates7 = {
-                            new Coordinate(x2 + 1, y2 - 1),
-                            new Coordinate(x3 + 1, y3 + 1)
-                    };
-                    if (isAllowedMove(coordinates7)) {
-                        board[x2 + 1][y2 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-                        board[x3 + 1][y3 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTL3);
-                    }
-                    break;
-                case RIGHTL3:
-                    Coordinate[] coordinates8 = {
-                            new Coordinate(x2 + 1, y2 + 2),
-                            new Coordinate(x3 + 3, y3)
-                    };
-                    if (isAllowedMove(coordinates8)) {
-                        board[x2 + 1][y2 + 2].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-                        board[x3 + 3][y3].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTL0);
-                    }
-                    break;
-                case LEFTL0:
-                    Coordinate[] coordinates9 = {
-                            new Coordinate(x1 + 3, y1),
-                            new Coordinate(x2 + 1, y2 - 2)
-                    };
-                    if (isAllowedMove(coordinates9)) {
-
-                        board[x1 + 3][y1].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-                        board[x2 + 1][y2 - 2].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.LEFTL1);
-                    }
-                    break;
-                case LEFTL1:
-                    Coordinate[] coordinates10 = {
-                            new Coordinate(x1 - 1, y1 + 1),
-                            new Coordinate(x2 + 1, y2 + 1)
-                    };
-                    if (isAllowedMove(coordinates10)) {
-
-                        board[x1 + 1][y1 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-                        board[x2 + 1][y2 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.LEFTL2);
-                    }
-                    break;
-                case LEFTL2:
-                    Coordinate[] coordinates11 = {
-                            new Coordinate(x1 - 2, y1 + 2),
-                            new Coordinate(x2 - 2, y2)
-                    };
-                    if (isAllowedMove(coordinates11)) {
-
-                        board[x1 - 2][y1 + 2].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-                        board[x2 - 2][y2].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.LEFTL3);
-                    }
-                    break;
-                case LEFTL3:
-                    Coordinate[] coordinates12 = {
-                            new Coordinate(x1 - 2, y1 - 1),
-                            new Coordinate(x2, y2 + 1)
-                    };
-                    if (isAllowedMove(coordinates12)) {
-
-                        board[x1 - 2][y1 - 1].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-                        board[x2][y2 + 1].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-
-
-                        activeTetrominoe.setShape(Tetrominoe.Shape.LEFTL0);
-                    }
-                    break;
-                case RIGHTSNAKE0:
-                    polarize = -1;
-                case RIGHTSNAKE1:
-                    Coordinate[] coordinates13 = { // TODO: 2018-03-28 Fix name
-                            new Coordinate(x1 + 2 * polarize, y1 + 1 * polarize),
-                            new Coordinate(x2, y2 + 1 * polarize)
-                    };
-
-                    if (isAllowedMove(coordinates13)) {
-                        board[x1 + 2 * polarize][y1 + 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[1]);
-                        board[x1][y1].setAndActiveSquare(null);
-
-                        board[x2][y2 + 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[2]);
-                        board[x2][y2].setAndActiveSquare(null);
-                        if (type == Tetrominoe.Shape.RIGHTSNAKE0) {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTSNAKE1);
-                        } else {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.RIGHTSNAKE0);
-                        }
-                    }
-                    break;
-                case LEFTSNAKE0:
-                    polarize = -1;
-                case LEFTSNAKE1:
-                    Coordinate[] coordinates14 = { // TODO: 2018-03-28 Fix name
-                            new Coordinate(x0 - 2 * polarize, y0 + 1 * polarize),
-                            new Coordinate(x3, y3 + 1 * polarize)
-                    };
-                    if (isAllowedMove(coordinates14)) {
-                        board[x0 - 2 * polarize][y0 + 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[0]);
-                        board[x0][y0].setAndActiveSquare(null);
-
-                        board[x3][y3 + 1 * polarize].setAndActiveSquare(activeTetrominoe.getSquares()[3]);
-                        board[x3][y3].setAndActiveSquare(null);
-                        if (type == Tetrominoe.Shape.LEFTSNAKE0) {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.LEFTSNAKE1);
-                        } else {
-                            activeTetrominoe.setShape(Tetrominoe.Shape.LEFTSNAKE0);
-                        }
-                    }
-                    break;
-            }
+                }
+                break;
         }
     }
 
@@ -609,19 +597,19 @@ public class Board {
      */
     public void performKeyAction(KeyEvent keyEvent) {
         switch (keyEvent.getKeyCode()) {
-            case (UP):
-                rotateActiveTetrominoe();
+            case (KeyEvent.VK_UP):
+                rotateActiveTetromino();
                 break;
-            case (DOWN):
-                moveDownActiveTetrominoe();
+            case (KeyEvent.VK_DOWN):
+                moveDownActiveTetromino();
                 break;
-            case (RIGHT):
-                moveHorizActiveTetrominoe(true);
+            case (KeyEvent.VK_RIGHT):
+                moveHorizActiveTetromino(true);
                 break;
-            case (LEFT):
-                moveHorizActiveTetrominoe(false);
+            case (KeyEvent.VK_LEFT):
+                moveHorizActiveTetromino(false);
                 break;
-            case (SPACE):
+            case (KeyEvent.VK_SPACE):
                 pause();
                 break;
         }
@@ -650,56 +638,4 @@ public class Board {
     public int getRows() {
         return rows;
     }
-
-
-    // TODO: 2018-04-18 Remove this when done
-    @Override
-    public String toString() {
-        StringJoiner sj = new StringJoiner("\n");
-        for (int j = 0; j < rows; j++) {
-            int count = 0;
-            for (int i = 0; i < columns; i++) {
-                if (board[i][j].isFull() && !board[i][j].isActive()) {
-                    count++;
-                }
-            }
-            if (count > 5) {
-                sj.add("Row " + j + ": " + count);
-            }
-        }
-        return sj.toString();
-    }
-
-    /**
-    @Override
-    public String toString() {
-        StringJoiner sj = new StringJoiner(", ");
-        for (int j = 0; j < rows; j++) {
-            for (int i = 0; i < columns; i++) {
-                if (board[i][j].isFull()) {
-                    sj.add("(" + i + ", " + j + ", " + board[i][j].isFull() + ")");
-                }
-            }
-            sj.add("\n");
-        }
-        return sj.toString();
-    }
-    **/
-
-
-    /**
-    @Override
-    public String toString() {
-        StringJoiner sj = new StringJoiner(", ");
-        for (int i = 0; i < columns; i++) {
-            for (int j = 0; j < rows; j++) {
-                if (board[i][j].isActive()) {
-                    sj.add("(" + i + ", " + j + ")");
-                }
-            }
-        }
-        return sj.toString();
-    }
-    **/
-
 }

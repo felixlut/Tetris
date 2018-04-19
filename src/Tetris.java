@@ -64,14 +64,17 @@ public class Tetris implements KeyPressReceiver{
     }
 
     public synchronized void keyAction(KeyEvent keyEvent) {
-        board.performKeyAction(keyEvent);
+        if (!board.isPaused() || keyEvent.getKeyCode() == KeyEvent.VK_SPACE) {
+            board.performKeyAction(keyEvent);
+        }
+
     }
 
     private synchronized void tic() {
         paused = board.isPaused();
         if (!paused) {
             if (!movingShape) {
-                if (!board.createNewTetrominoe()) {
+                if (!board.createNewTetromino()) {
                     alive = false;
                 } else {
                     movingShape = true;
@@ -80,7 +83,7 @@ public class Tetris implements KeyPressReceiver{
             }
             if (alive) {
                 // Add score and remove full lines
-                if (!board.moveDownActiveTetrominoe()) {
+                if (!board.moveDownActiveTetromino()) {
                     int newScore = board.checkForScore();
                     score += newScore;
                     movingShape = false;

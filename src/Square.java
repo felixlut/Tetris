@@ -35,7 +35,7 @@ public class Square {
 
     /**
      * Only for test purposes
-     * @return the number this Square have in the Tetrominoe
+     * @return the number this Square have in the Tetromino
      */
     public int getNumberInOrder() {
         return numberInOrder;

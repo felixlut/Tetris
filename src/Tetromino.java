@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.util.Random;
 
-public class Tetrominoe {
+public class Tetromino {
 
     private final int shapeSize = 4;
     private Square[] squares;
@@ -10,7 +10,7 @@ public class Tetrominoe {
     protected PieceImage image;
 
     /**
-     * All 7 available Tetrominoe shapes and their rotated variations
+     * All 7 available Tetromino shapes and their rotated variations
      */
     public enum Shape {
         LINE0, LINE1,
@@ -23,9 +23,9 @@ public class Tetrominoe {
     }
 
     /**
-     * Create a Tetrominoe of a random shape
+     * Create a Tetromino of a random shape
      */
-    public Tetrominoe() {
+    public Tetromino() {
         Random random = new Random();
         squares = new Square[shapeSize];
         switch (random.nextInt(7)) {
@@ -37,40 +37,40 @@ public class Tetrominoe {
                         new Coordinate(0, 0),
                         new Coordinate(0, 0),
                 };
-                createTetrominoe(Color.BLUE);
+                createTetromino(Color.BLUE);
                 break;
             case 1:
                 shape = Shape.BOX;
-                createTetrominoe(Color.GREEN);
+                createTetromino(Color.GREEN);
                 break;
             case 2:
                 shape = Shape.PYRAMID0;
-                createTetrominoe(Color.RED);
+                createTetromino(Color.RED);
                 break;
             case 3:
                 shape = Shape.RIGHTL0;
-                createTetrominoe(Color.PINK);
+                createTetromino(Color.PINK);
                 break;
             case 4:
                 shape = Shape.LEFTL0;
-                createTetrominoe(Color.MAGENTA);
+                createTetromino(Color.MAGENTA);
                 break;
             case 5:
                 shape = Shape.RIGHTSNAKE0;
-                createTetrominoe(Color.YELLOW);
+                createTetromino(Color.YELLOW);
                 break;
             case 6:
                 shape = Shape.LEFTSNAKE0;
-                createTetrominoe(Color.CYAN);
+                createTetromino(Color.CYAN);
                 break;
         }
     }
 
     /**
-     * Create a Tetrominoe consisting of 4 squares of the specified color
+     * Create a Tetromino consisting of 4 squares of the specified color
      * @param color
      */
-    private void createTetrominoe(Color color) {
+    private void createTetromino(Color color) {
         this.color = color;
         for (int i = 0; i < shapeSize; i++) {
             squares[i] = new Square(color, i);

@@ -7,7 +7,7 @@ public class Tetrominoe {
     private Square[] squares;
     private Shape shape;
     private Color color;
-    private Coordinate[][] coordinates = new Coordinate[4][4];
+    protected PieceImage image;
 
     /**
      * All 7 available Tetrominoe shapes and their rotated variations
@@ -31,6 +31,12 @@ public class Tetrominoe {
         switch (random.nextInt(7)) {
             case 0:
                 shape = Shape.LINE0;
+                Coordinate[] coordinates = {
+                        new Coordinate(0, 0),
+                        new Coordinate(0, 0),
+                        new Coordinate(0, 0),
+                        new Coordinate(0, 0),
+                };
                 createTetrominoe(Color.BLUE);
                 break;
             case 1:
@@ -58,7 +64,6 @@ public class Tetrominoe {
                 createTetrominoe(Color.CYAN);
                 break;
         }
-
     }
 
     /**

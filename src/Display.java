@@ -16,17 +16,18 @@ public class Display {
     private JFrame frame;
     private Canvas canvas;
     private Board board;
+    private KeyPressReceiver keyPressReceiver;
 
     // Basic information for the display
     private String title;
     private int width, height;
 
-    public Display(String title, int width, int height, Board board) {
+    public Display(String title, int width, int height, Board board, KeyPressReceiver keyPressReceiver) {
         this.title = title;
         this.width = width;
         this.height = height;
         this.board = board;
-
+        this.keyPressReceiver = keyPressReceiver;
         frame = new JFrame(title);
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -42,24 +43,7 @@ public class Display {
 
             @Override
             public void keyPressed(KeyEvent e) {
-                board.addKeyAction(e.getKeyCode());
-                switch (e.getKeyCode()) {
-                    case (UP):
-                        board.rotateActiveTetrominoe();
-                        break;
-                    case (DOWN):
-                        board.moveDownActiveTetrominoe();
-                        break;
-                    case (RIGHT):
-                        board.moveHorizActiveTetrominoe(true);
-                        break;
-                    case (LEFT):
-                        board.moveHorizActiveTetrominoe(false);
-                        break;
-                    case (SPACE):
-                        board.pause();
-                        break;
-                }
+                keyPressReceiver.keyAction(e);
             }
 
             @Override

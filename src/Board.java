@@ -1,3 +1,4 @@
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.StringJoiner;
@@ -24,8 +25,6 @@ public class Board {
     private ArrayList<Coordinate> pausedCoords;
     private boolean paused;
 
-    //
-    private Queue<Integer> keyActions;
 
     public Board (int columns, int rows) {
         this.rows = rows;
@@ -38,7 +37,6 @@ public class Board {
                 board[i][j] = new Tile(i, j);
             }
         }
-        keyActions = new ConcurrentLinkedQueue<>();
         pausedCoords = new ArrayList<>();
         paused = false;
     }
@@ -609,36 +607,24 @@ public class Board {
     /**
      * Perform every KeyAction
      */
-    public void performKeyActions() {
-        for (Integer keyAction : keyActions) {
-            switch (keyAction) {
-                case (UP):
-                    rotateActiveTetrominoe();
-                    break;
-                case (DOWN):
-                    moveDownActiveTetrominoe();
-                    break;
-                case (RIGHT):
-                    moveHorizActiveTetrominoe(true);
-                    break;
-                case (LEFT):
-                    moveHorizActiveTetrominoe(false);
-                    break;
-                case (SPACE):
-                    pause();
-                    break;
-            }
+    public void performKeyAction(KeyEvent keyEvent) {
+        switch (keyEvent.getKeyCode()) {
+            case (UP):
+                rotateActiveTetrominoe();
+                break;
+            case (DOWN):
+                moveDownActiveTetrominoe();
+                break;
+            case (RIGHT):
+                moveHorizActiveTetrominoe(true);
+                break;
+            case (LEFT):
+                moveHorizActiveTetrominoe(false);
+                break;
+            case (SPACE):
+                pause();
+                break;
         }
-    }
-
-
-
-    /**
-     * Add key actions to perform
-     * @param keyAction
-     */
-    public void addKeyAction (int keyAction) {
-        keyActions.add(keyAction);
     }
 
     public boolean isPaused() {

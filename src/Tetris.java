@@ -1,14 +1,14 @@
+import java.awt.event.KeyEvent;
 import java.util.TimerTask;
 import java.util.Timer;
 
 
-public class Tetris {
+public class Tetris implements KeyPressReceiver{
 
     // Framerate
     final int FPS = 60;
     final long renderPeriodTime = 1000/FPS;
     final long updatePeriod = 1000/1;
-
 
     // The display and board of the tetris game
     private Display display;
@@ -34,7 +34,7 @@ public class Tetris {
         board = new Board(columns, rows);
         width = board.getBoard()[0][0].getTileLength() * 10;
         height = board.getBoard()[0][0].getTileLength() * 20;
-        display = new Display(title, width, height, board);
+        display = new Display(title, width, height, board, this);
         timer = new Timer();
         alive = true;
         movingShape = false;
@@ -43,8 +43,10 @@ public class Tetris {
     }
 
     public void runTetris() {
+        // Setup a thread that renders the display
         timer.scheduleAtFixedRate(new RenderTask(), 0, renderPeriodTime);
 
+        // Main game loop
         while (alive) {
             long startTime = System.currentTimeMillis();
 
@@ -61,6 +63,10 @@ public class Tetris {
         display.render();
     }
 
+    public synchronized void keyAction(KeyEvent keyEvent) {
+        board.performKeyAction(keyEvent);
+    }
+
     private synchronized void tic() {
         paused = board.isPaused();
         if (!paused) {
@@ -73,7 +79,6 @@ public class Tetris {
 
             }
             if (alive) {
-
                 // Add score and remove full lines
                 if (!board.moveDownActiveTetrominoe()) {
                     int newScore = board.checkForScore();

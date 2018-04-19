@@ -7,6 +7,7 @@ public class Tetrominoe {
     private Square[] squares;
     private Shape shape;
     private Color color;
+    private Coordinate[][] coordinates = new Coordinate[4][4];
 
     /**
      * All 7 available Tetrominoe shapes and their rotated variations

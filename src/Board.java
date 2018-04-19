@@ -1,17 +1,31 @@
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Board {
+
+    // KeyCodes
+    private static final int UP = 38;
+    private static final int DOWN = 40;
+    private static final int RIGHT = 39;
+    private static final int LEFT = 37;
+    private static final int SPACE = 32;
 
     private Tile[][] board;
     private Tetrominoe activeTetrominoe;
     private int score;
 
+    // The number of rows and columns
     private final int columns;
     private final int rows;
 
-    private ArrayList<Coordinate> devFreezeCoords; // TODO: 2018-04-19 remove
-    private boolean devFreezed = false;
+    // Used to store the coordinates of the paused active tetrominoe
+    private ArrayList<Coordinate> pausedCoords;
+    private boolean paused;
+
+    //
+    private Queue<Integer> keyActions;
 
     public Board (int columns, int rows) {
         this.rows = rows;
@@ -24,8 +38,9 @@ public class Board {
                 board[i][j] = new Tile(i, j);
             }
         }
-
-        devFreezeCoords = new ArrayList<>();
+        keyActions = new ConcurrentLinkedQueue<>();
+        pausedCoords = new ArrayList<>();
+        paused = false;
     }
 
     /**
@@ -104,29 +119,26 @@ public class Board {
      * @return          true if a move has been made, false otherwise
      */
     public boolean moveDownActiveTetrominoe() {
-        if (!devFreezed) {
-            if (moveDownActiveTetrominoeHelper()) {
-                for (int i = columns - 1; i >= 0; i--) {
-                    for (int j = rows - 1; j >= 0; j--) {
-                        if (board[i][j].isActive()) {
-                            board[i][j + 1].setAndActiveSquare(board[i][j].getSquare());
-                            board[i][j].setAndActiveSquare(null);
-                        }
+        if (moveDownActiveTetrominoeHelper()) {
+            for (int i = columns - 1; i >= 0; i--) {
+                for (int j = rows - 1; j >= 0; j--) {
+                    if (board[i][j].isActive()) {
+                        board[i][j + 1].setAndActiveSquare(board[i][j].getSquare());
+                        board[i][j].setAndActiveSquare(null);
                     }
                 }
-                return true;
-            } else {
-                for (int i = columns - 1; i >= 0; i--) {
-                    for (int j = rows - 1; j >= 0; j--) {
-                        if (board[i][j].isActive()) {
-                            board[i][j].setActive(false);
-                        }
-                    }
-                }
-                return false;
             }
+            return true;
+        } else {
+            for (int i = columns - 1; i >= 0; i--) {
+                for (int j = rows - 1; j >= 0; j--) {
+                    if (board[i][j].isActive()) {
+                        board[i][j].setActive(false);
+                    }
+                }
+            }
+            return false;
         }
-        return true;
     }
 
     /**
@@ -210,7 +222,7 @@ public class Board {
      */
     // TODO: 2018-04-18 Streamline this
     public void rotateActiveTetrominoe () {
-        if (!devFreezed) {
+        if (!paused) {
             int x0 = activeTetrominoe.getSquares()[0].getxPos();
             int y0 = activeTetrominoe.getSquares()[0].getyPos();
 
@@ -501,7 +513,10 @@ public class Board {
         return cord.getxPos() >= 0 && cord.getxPos() < columns && cord.getyPos() >= 0 && cord.getyPos() < rows;
     }
 
-
+    /**
+     * Check each row to see if it's full. If a row is, remove it and add a point to the score
+     * @return      The number of rows removed
+     */
     public int checkForScore () {
         int count = 0;
         for (int i = rows - 1; i >= 0; i--) {
@@ -513,6 +528,11 @@ public class Board {
         return count;
     }
 
+    /**
+     * Remove the specified row if it's full and then move down each above row
+     * @param row   The specified row
+     * @return      true if a row was removed, false otherwise
+     */
     private boolean removeRow (int row) {
         if (fullRow(row)) {
             // Remove all squares from the row
@@ -529,7 +549,7 @@ public class Board {
     }
 
     /**
-     * Move down every row over a specified row. Used each time the player scores
+     * Move down every row over a specified row. Used each renderPeriodTime the player scores
      * @param row       The row of which every above lying row should be moved down
      */
     private void moveDownOver (int row) {
@@ -564,28 +584,66 @@ public class Board {
     }
 
     /**
-     * Freezes the screen. Used only by developer
+     * Pause the game
      */
-    public void devFreeze() {
-        if (!devFreezed) {
+    public void pause() {
+        if (!paused) {
             for (int i = columns - 1; i >= 0; i--) {
                 for (int j = rows - 1; j >= 0; j--) {
                     if (board[i][j].isActive()) {
                         board[i][j].setActive(false);
-                        devFreezeCoords.add(new Coordinate(i, j));
+                        pausedCoords.add(new Coordinate(i, j));
                     }
                 }
             }
-            devFreezed = true;
+            paused = true;
         } else {
-            for (Coordinate cord : devFreezeCoords) {
+            for (Coordinate cord : pausedCoords) {
                 board[cord.getxPos()][cord.getyPos()].setActive(true);
             }
-            devFreezeCoords.clear();
-            devFreezed = false;
+            pausedCoords.clear();
+            paused = false;
         }
     }
 
+    /**
+     * Perform every KeyAction
+     */
+    public void performKeyActions() {
+        for (Integer keyAction : keyActions) {
+            switch (keyAction) {
+                case (UP):
+                    rotateActiveTetrominoe();
+                    break;
+                case (DOWN):
+                    moveDownActiveTetrominoe();
+                    break;
+                case (RIGHT):
+                    moveHorizActiveTetrominoe(true);
+                    break;
+                case (LEFT):
+                    moveHorizActiveTetrominoe(false);
+                    break;
+                case (SPACE):
+                    pause();
+                    break;
+            }
+        }
+    }
+
+
+
+    /**
+     * Add key actions to perform
+     * @param keyAction
+     */
+    public void addKeyAction (int keyAction) {
+        keyActions.add(keyAction);
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
 
     public void setScore(int score) {
         this.score = score;
@@ -606,6 +664,7 @@ public class Board {
     public int getRows() {
         return rows;
     }
+
 
     // TODO: 2018-04-18 Remove this when done
     @Override

@@ -5,10 +5,13 @@ import java.util.Timer;
 
 public class Tetris implements KeyPressReceiver{
 
-    // Framerate
+    // Frame rate
     final int FPS = 60;
-    final long renderPeriodTime = 1000/FPS;
-    final long updatePeriod = 1000/1;
+    final long RENDERPERIODTIME = 1000/FPS;
+
+    // How often the game logic updates
+    final int UPDATEGAMELOGIC = 5;
+    final long UPDATEPERIOD = 1000/UPDATEGAMELOGIC;
 
     // The display and board of the tetris game
     private Display display;
@@ -42,27 +45,43 @@ public class Tetris implements KeyPressReceiver{
         paused = false;
     }
 
+    /**
+     * Run the game Tetris
+     */
     public void runTetris() {
         // Setup a thread that renders the display
-        timer.scheduleAtFixedRate(new RenderTask(), 0, renderPeriodTime);
+        timer.scheduleAtFixedRate(new RenderTask(), 0, RENDERPERIODTIME);
 
         // Main game loop
         while (alive) {
             long startTime = System.currentTimeMillis();
 
-            tic();
-
+            paused = board.isPaused();
+            // If the game isn't paused the game logic should proceed
+            if (!paused) {
+                tic();
+            }
             long spentTime = System.currentTimeMillis() - startTime;
+
+            // Keep the update rate at the desired speed
             try {
-                Thread.sleep(updatePeriod - spentTime);
+                Thread.sleep(UPDATEPERIOD - spentTime);
             } catch (Exception e) {}
         }
     }
 
+    /**
+     * Render the display
+     */
     private synchronized void render() {
         display.render();
     }
 
+    /**
+     * Deal with keyEvents as long as the game isn't paused or the KeyEvent in question
+     * are meant to alter the paused state
+     * @param keyEvent  The KeyEvent
+     */
     public synchronized void keyAction(KeyEvent keyEvent) {
         if (!board.isPaused() || keyEvent.getKeyCode() == KeyEvent.VK_SPACE) {
             board.performKeyAction(keyEvent);
@@ -70,29 +89,33 @@ public class Tetris implements KeyPressReceiver{
 
     }
 
+    /**
+     * Game logic for Tetris
+     */
     private synchronized void tic() {
-        paused = board.isPaused();
-        if (!paused) {
-            if (!movingShape) {
-                if (!board.createNewTetromino()) {
-                    alive = false;
-                } else {
-                    movingShape = true;
-                }
-
+        // If there is no moving Tetromino, create a new one
+        if (!movingShape) {
+            // If it's impossible to create a new Tetromino on the board,
+            if (!board.createNewTetromino()) {
+                alive = false;
+            } else {
+                movingShape = true;
             }
-            if (alive) {
-                // Add score and remove full lines
-                if (!board.moveDownActiveTetromino()) {
-                    int newScore = board.checkForScore();
-                    score += newScore;
-                    movingShape = false;
-                    board.setScore(score);
-                }
+        }
+        if (alive) {
+            // Check if score should be added and lines removed if the active Tetromino can't be moved down further
+            if (!board.moveDownActiveTetromino()) {
+                int newScore = board.checkForScore();
+                score += newScore;
+                movingShape = false;
+                board.setScore(score);
             }
         }
     }
 
+    /**
+     * Setup a thread that renders the display on a timer
+     */
     private class RenderTask extends TimerTask {
         @Override
         public void run() {

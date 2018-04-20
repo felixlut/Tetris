@@ -11,7 +11,7 @@ public class Board {
     private final int columns;
     private final int rows;
 
-    // Used to store the coordinates of the paused active tetromino
+    // Used to store the image of the paused active tetromino
     private ArrayList<Coordinate> pausedCoords;
     private boolean paused;
 
@@ -478,8 +478,8 @@ public class Board {
     /**
      * Checks whether every coordinate of the list is both on the board and also isn't already occupied by a square.
      * This is used to check if a potential rotation is possible or not
-     * @param coordinates       A list of coordinates to check
-     * @return                  True if all the coordinates are on the board and aren't occupied, false otherwise
+     * @param coordinates       A list of image to check
+     * @return                  True if all the image are on the board and aren't occupied, false otherwise
      */
     private boolean isAllowedMove(Coordinate[] coordinates) {
         for (Coordinate cord : coordinates) {
@@ -535,7 +535,7 @@ public class Board {
     }
 
     /**
-     * Move down every row over a specified row. Used each renderPeriodTime the player scores
+     * Move down every row over a specified row. Used each RENDERPERIODTIME the player scores
      * @param row       The row of which every above lying row should be moved down
      */
     private void moveDownOver (int row) {
@@ -637,5 +637,9 @@ public class Board {
 
     public int getRows() {
         return rows;
+    }
+
+    public Tetromino getActiveTetromino() {
+        return activeTetromino;
     }
 }

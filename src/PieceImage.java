@@ -1,12 +1,12 @@
 public class PieceImage {
 
-    Coordinate[] coordinates;
+    Coordinate[] image;
 
-    public PieceImage(Coordinate[] coordinates){
-        this.coordinates = coordinates;
+    public PieceImage(Coordinate[] image){
+        this.image = image;
     }
 
-    public Coordinate[] getCoordinates() {
-        return coordinates;
+    public Coordinate[] getImage() {
+        return image;
     }
 }

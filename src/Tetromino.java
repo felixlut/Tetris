@@ -1,91 +1,149 @@
 import java.awt.*;
-import java.util.Random;
 
-public class Tetromino {
+public abstract class Tetromino {
 
-    private final int shapeSize = 4;
-    private Square[] squares;
-    private Shape shape;
-    private Color color;
-    protected PieceImage image;
+    protected final int SHAPE_SIZE = 4;
+    protected Square[] squares = new Square[4];
+    protected Color color;
+    protected PieceImage[] images = new PieceImage[4];
+    protected PieceImage activeImage;
+    protected int imageNumber;
+    protected Coordinate referenceCoordinate;
+    protected Board board;
+    protected boolean active;
 
     /**
-     * All 7 available Tetromino shapes and their rotated variations
+     * Try to move down the tetromino
+     * @return      true if the tetromino was moved down, false otherwise
      */
-    public enum Shape {
-        LINE0, LINE1,
-        BOX,
-        PYRAMID0, PYRAMID1, PYRAMID2, PYRAMID3,
-        RIGHTL0, RIGHTL1, RIGHTL2, RIGHTL3,
-        LEFTL0, LEFTL1, LEFTL2, LEFTL3,
-        RIGHTSNAKE0, RIGHTSNAKE1,
-        LEFTSNAKE0, LEFTSNAKE1
+    public boolean moveDown() {
+        if (active) {
+            // Save the potential coordinate
+            Coordinate potentialReferenceCord = new Coordinate(
+                    referenceCoordinate.getxPos(),
+                    referenceCoordinate.getyPos()
+            );
+
+            // Move the potential coordinate down a row
+            potentialReferenceCord.incrementYPos();
+
+            // Check if the active image can be moved down with the potential coordinate
+            if (validImageCoordinate(activeImage, potentialReferenceCord)) {
+                referenceCoordinate = potentialReferenceCord;
+                return true;
+            } else {
+                board.fillSquares(getCurrentCoordinates());
+                active = false;
+                return false;
+            }
+        }
+        return false;
     }
 
     /**
-     * Create a Tetromino of a random shape
+     * Make a horizontal move for the tetromino
+     * @param right     specify if it's a right or left move
+     * @return          true if the tetromino was moved down, false otherwise
      */
-    public Tetromino() {
-        Random random = new Random();
-        squares = new Square[shapeSize];
-        switch (random.nextInt(7)) {
+    public boolean moveHorizontal(boolean right) {
+        // Save the potential coordinate
+        Coordinate potentialReferenceCord = new Coordinate(
+                referenceCoordinate.getxPos(),
+                referenceCoordinate.getyPos()
+        );
+
+        // Move the potential coordinate horizontally a column
+        // Check if it's a right or a left move
+        if (right) {
+            potentialReferenceCord.incrementXPos();
+        } else {
+            potentialReferenceCord.decrementXPos();
+
+        }
+
+        // Check if the active image can be moved horizontally with the potential coordinate
+        if (validImageCoordinate(activeImage, potentialReferenceCord)) {
+            referenceCoordinate = potentialReferenceCord;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Try to rotate the tetromino
+     */
+    public void rotate() {
+        // Save the potential image and imageNumber
+        PieceImage potentialImage = null;
+        int potentialImageNumber = imageNumber;
+
+        // Set the potential image to the next rotated stage and alter the potentialImageNumber to the next stage
+        switch (potentialImageNumber) {
             case 0:
-                shape = Shape.LINE0;
-                Coordinate[] coordinates = {
-                        new Coordinate(0, 0),
-                        new Coordinate(0, 0),
-                        new Coordinate(0, 0),
-                        new Coordinate(0, 0),
-                };
-                createTetromino(Color.BLUE);
+                potentialImage = images[potentialImageNumber + 1];
+                potentialImageNumber++;
                 break;
             case 1:
-                shape = Shape.BOX;
-                createTetromino(Color.GREEN);
+                potentialImage = images[potentialImageNumber + 1];
+                potentialImageNumber++;
                 break;
             case 2:
-                shape = Shape.PYRAMID0;
-                createTetromino(Color.RED);
+                potentialImage = images[potentialImageNumber + 1];
+                potentialImageNumber++;
                 break;
             case 3:
-                shape = Shape.RIGHTL0;
-                createTetromino(Color.PINK);
+                potentialImage = images[0];
+                potentialImageNumber = 0;
                 break;
-            case 4:
-                shape = Shape.LEFTL0;
-                createTetromino(Color.MAGENTA);
-                break;
-            case 5:
-                shape = Shape.RIGHTSNAKE0;
-                createTetromino(Color.YELLOW);
-                break;
-            case 6:
-                shape = Shape.LEFTSNAKE0;
-                createTetromino(Color.CYAN);
-                break;
+        }
+        // If the potential image with the current referenceCoordinate yields a valid state, go through with the rotation
+        if (validImageCoordinate(potentialImage, referenceCoordinate)) {
+            activeImage = potentialImage;
+            imageNumber = potentialImageNumber;
         }
     }
 
-    /**
-     * Create a Tetromino consisting of 4 squares of the specified color
-     * @param color
-     */
-    private void createTetromino(Color color) {
-        this.color = color;
-        for (int i = 0; i < shapeSize; i++) {
-            squares[i] = new Square(color, i);
+    private boolean validImageCoordinate(PieceImage pieceImage, Coordinate coordinate) {
+        for (Coordinate cord : pieceImage.getImage()) {
+            Coordinate potentialCord = new Coordinate(
+                    coordinate.getxPos() + cord.getxPos(),
+                    coordinate.getyPos() + cord.getyPos()
+            );
+            if (!validCoordinate(potentialCord)) {
+                return false;
+            }
         }
+        return true;
     }
 
-    public Shape getShape() {
-        return shape;
+    private boolean validCoordinate (Coordinate potentialCord) {
+        return board.isCordOnBoard(potentialCord) && !board.occupiedCoordinate(potentialCord);
+    }
+
+    public Coordinate[] getCurrentCoordinates() {
+        Coordinate[] currentCoordinates = new Coordinate[4];
+        int i = 0;
+        for (Coordinate cord : activeImage.getImage()) {
+            currentCoordinates[i] = new Coordinate(
+                    referenceCoordinate.getxPos() + cord.getxPos(),
+                    referenceCoordinate.getyPos() + cord.getyPos()
+            );
+            i++;
+        }
+
+        return currentCoordinates;
     }
 
     public Square[] getSquares() {
         return squares;
     }
 
-    public void setShape(Shape shape) {
-        this.shape = shape;
+    public Color getColor() {
+        return color;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

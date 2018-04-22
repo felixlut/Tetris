@@ -6,29 +6,19 @@ import java.awt.image.BufferStrategy;
 
 public class Display {
 
-    // KeyCodes
-    private static final int UP = 38;
-    private static final int DOWN = 40;
-    private static final int RIGHT = 39;
-    private static final int LEFT = 37;
-    private static final int SPACE = 32;
-
     private JFrame frame;
     private Canvas canvas;
     private Board board;
-    private KeyPressReceiver keyPressReceiver;
 
     // Basic information for the display
-    private String title;
     private int width, height;
 
-    public Display(String title, int width, int height, Board board, KeyPressReceiver keyPressReceiver) {
-        this.title = title;
+    public Display(int width, int height, Board board, KeyPressReceiver keyPressReceiver) {
         this.width = width;
         this.height = height;
         this.board = board;
-        this.keyPressReceiver = keyPressReceiver;
-        frame = new JFrame(title);
+
+        frame = new JFrame();
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -37,9 +27,7 @@ public class Display {
         frame.setVisible(true);
         frame.addKeyListener(new KeyListener() {
             @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
+            public void keyTyped(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {
@@ -47,9 +35,7 @@ public class Display {
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
+            public void keyReleased(KeyEvent e) {}
         });
 
         canvas = new Canvas();
@@ -64,6 +50,9 @@ public class Display {
         frame.pack();
     }
 
+    /**
+     * Render the screen
+     */
     public void render() {
         BufferStrategy bs = getCanvas().getBufferStrategy();
         if (bs == null) {
@@ -76,31 +65,36 @@ public class Display {
                 Graphics graphics = bs.getDrawGraphics();
 
                 // Set the font
-                Font font = new Font("Sans serif", Font.BOLD, 18);
+                Font font = new Font("Sans serif", Font.BOLD, 14);
                 graphics.setFont(font);
 
-                // Draw the squares
+                // Draw the tiles and stationary squares
+                int tileLength = board.getBoard()[0][0].getTile_Length();
                 for (int i = 0; i < board.getColumns(); i++) {
                     for (int j = 0; j < board.getRows(); j++) {
-                        int tileLength = board.getBoard()[i][j].getTileLength();
                         graphics.setColor(board.getBoard()[i][j].getColor());
                         graphics.fillRect(i * tileLength, j * tileLength, tileLength, tileLength);
-                        if (board.getBoard()[i][j].isActive()) {
-                            graphics.setColor(Color.black);
-                            graphics.drawString(String.valueOf(board.getBoard()[i][j].getSquare().getNumberInOrder()),
-                                    i * tileLength + tileLength/2, j * tileLength + tileLength/2);
-                        }
                     }
                 }
-                frame.setTitle("Score: " + board.getScore());
+
+                // Draw the active tetromino
+                if (board.getActiveTetromino().isActive()) {
+                    for (Coordinate coordinate : board.getActiveTetromino().getCurrentCoordinates()) {
+                        graphics.setColor(board.getActiveTetromino().getColor());
+                        graphics.fillRect(coordinate.getxPos() * tileLength, coordinate.getyPos() * tileLength, tileLength, tileLength);
+                    }
+                }
+
+                // Add the score and the paused state to the title of the frame
+                StringBuilder scoreTitle = new StringBuilder("Score: " + board.getScore());
+                if (board.isPaused()) {
+                    scoreTitle.append(" GAME PAUSED");
+                }
+                frame.setTitle(scoreTitle.toString());
 
                 graphics.dispose();
-
-
             } while (bs.contentsRestored());
-
             bs.show();
-
         } while (bs.contentsLost());
     }
 

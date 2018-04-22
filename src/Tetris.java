@@ -6,12 +6,13 @@ import java.util.Timer;
 public class Tetris implements KeyPressReceiver{
 
     // Frame rate
-    final int FPS = 60;
-    final long RENDERPERIODTIME = 1000/FPS;
+    private final int FPS = 60;
+    private final long RENDER_PERIOD_TIME = 1000/FPS;
 
     // How often the game logic updates
-    final int UPDATEGAMELOGIC = 5;
-    final long UPDATEPERIOD = 1000/UPDATEGAMELOGIC;
+    private double updateGameLogic;
+    private double updatePeriod;
+
 
     // The display and board of the tetris game
     private Display display;
@@ -20,29 +21,30 @@ public class Tetris implements KeyPressReceiver{
 
     // Game info
     private boolean alive;
-    boolean movingShape;
-    int score;
-    boolean paused;
+    private boolean movingShape;
+    private int score;
+    private boolean paused;
 
     // The metadata of the display
-    private final String title = "Tetris";
     private final int width;
     private final int height;
 
     // The metadata of the display
-    private final int columns = 10;
-    private final int rows = 20;
+    private static final int COLUMNS = 10;
+    private static final int ROWS = 20;
 
     public Tetris () {
-        board = new Board(columns, rows);
-        width = board.getBoard()[0][0].getTileLength() * 10;
-        height = board.getBoard()[0][0].getTileLength() * 20;
-        display = new Display(title, width, height, board, this);
+        board = new Board(COLUMNS, ROWS);
+        width = board.getBoard()[0][0].getTile_Length() * COLUMNS;
+        height = board.getBoard()[0][0].getTile_Length() * ROWS;
+        display = new Display(width, height, board, this);
         timer = new Timer();
         alive = true;
         movingShape = false;
         score = 0;
         paused = false;
+        updateGameLogic = 1.0;
+        updatePeriod = 1000/updateGameLogic;
     }
 
     /**
@@ -50,11 +52,12 @@ public class Tetris implements KeyPressReceiver{
      */
     public void runTetris() {
         // Setup a thread that renders the display
-        timer.scheduleAtFixedRate(new RenderTask(), 0, RENDERPERIODTIME);
+        timer.scheduleAtFixedRate(new RenderTask(), 1, RENDER_PERIOD_TIME);
 
         // Main game loop
         while (alive) {
             long startTime = System.currentTimeMillis();
+            updatePeriod = 1000/updateGameLogic;
 
             paused = board.isPaused();
             // If the game isn't paused the game logic should proceed
@@ -65,7 +68,7 @@ public class Tetris implements KeyPressReceiver{
 
             // Keep the update rate at the desired speed
             try {
-                Thread.sleep(UPDATEPERIOD - spentTime);
+                Thread.sleep((long) updatePeriod - spentTime);
             } catch (Exception e) {}
         }
     }
@@ -78,15 +81,14 @@ public class Tetris implements KeyPressReceiver{
     }
 
     /**
-     * Deal with keyEvents as long as the game isn't paused or the KeyEvent in question
-     * are meant to alter the paused state
+     * Deal with keyEvents as long as the game isn't paused or the KeyEvent in question meant to alter
+     * the paused state. The tetromino must also be active
      * @param keyEvent  The KeyEvent
      */
     public synchronized void keyAction(KeyEvent keyEvent) {
-        if (!board.isPaused() || keyEvent.getKeyCode() == KeyEvent.VK_SPACE) {
+        if (board.getActiveTetromino().isActive() && (!board.isPaused() || keyEvent.getKeyCode() == KeyEvent.VK_SPACE) ) {
             board.performKeyAction(keyEvent);
         }
-
     }
 
     /**
@@ -104,11 +106,18 @@ public class Tetris implements KeyPressReceiver{
         }
         if (alive) {
             // Check if score should be added and lines removed if the active Tetromino can't be moved down further
-            if (!board.moveDownActiveTetromino()) {
+            if (!board.moveDownTetromino()) {
                 int newScore = board.checkForScore();
-                score += newScore;
+                // Update the score
+                if (newScore > 0) {
+                    // Increase the difficulty by 30% each 10 points
+                    if (score % 10 + newScore >= 10) {
+                        updateGameLogic *= 1.3;
+                    }
+                    score += newScore;
+                    board.setScore(score);
+                }
                 movingShape = false;
-                board.setScore(score);
             }
         }
     }

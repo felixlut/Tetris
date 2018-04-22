@@ -1,41 +1,47 @@
+import java.awt.*;
+
 public class Line extends Tetromino {
 
-    private final Coordinate[] LINE0 = {
+    // The coordinates relative to (0, 0) of each stage in a rotation
+    private final Coordinate[] STAGE_0 = {
+            new Coordinate(-1, 0),
             new Coordinate(0, 0),
+            new Coordinate(1, 0),
+            new Coordinate(2, 0),
+    };
+    private final Coordinate[] STAGE_1 = {
+            new Coordinate(0, -1),
             new Coordinate(0, 0),
+            new Coordinate(0, 1),
+            new Coordinate(0, 2),
+
+    };
+    private final Coordinate[] STAGE_2 = {
+            new Coordinate(1, 0),
             new Coordinate(0, 0),
+            new Coordinate(-1, 0),
+            new Coordinate(-2, 0),
+    };
+    private final Coordinate[] STAGE_3 = {
+            new Coordinate(0, 1),
             new Coordinate(0, 0),
+            new Coordinate(0, -1),
+            new Coordinate(0, -2),
     };
 
-    private final Coordinate[] LINE1 = {
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-    };
-
-    private final Coordinate[] LINE2 = {
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-    };
-
-    private final Coordinate[] LINE3 = {
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-            new Coordinate(0, 0),
-    };
-
-    public Line() {
-        Coordinate[] coordinates0 = {
-                new Coordinate(0, 0),
-                new Coordinate(0, 0),
-                new Coordinate(0, 0),
-                new Coordinate(0, 0),
-        };
-
-        image = new PieceImage(coordinates0);
+    public Line(Coordinate coordinate, Board board) {
+        this.board = board;
+        images[0] = new PieceImage(STAGE_0);
+        images[1] = new PieceImage(STAGE_1);
+        images[2] = new PieceImage(STAGE_2);
+        images[3] = new PieceImage(STAGE_3);
+        activeImage = images[0];
+        referenceCoordinate = coordinate;
+        color = Color.BLUE;
+        for (int i = 0; i < SHAPE_SIZE; i++) {
+            squares[i] = new Square(color);
+        }
+        active = true;
     }
 }
+
